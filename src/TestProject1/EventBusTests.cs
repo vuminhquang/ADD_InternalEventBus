@@ -23,10 +23,12 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
                 _testOutputHelper.WriteLine($"Sync received message: {message}");
                 receivedMessage = message;
             });
-
+            
             // Act
             _testOutputHelper.WriteLine("Publishing sync event...");
             await _eventBus.PublishAsync("Hello, Sync EventBus!");
+            
+            await Task.Delay(1000);
 
             // Assert
             Assert.Equal("Hello, Sync EventBus!", receivedMessage);
@@ -43,10 +45,12 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
                 await Task.Delay(100); // Simulate async work
                 receivedMessage = message;
             });
-
+            
             // Act
             _testOutputHelper.WriteLine("Publishing async event...");
             await _eventBus.PublishAsync("Hello, Async EventBus!");
+            
+            await Task.Delay(1000);
 
             // Assert
             Assert.Equal("Hello, Async EventBus!", receivedMessage);
@@ -74,7 +78,9 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
             // Act
             _testOutputHelper.WriteLine("Publishing mixed event...");
             await _eventBus.PublishAsync("Hello, Mixed EventBus!");
-
+            
+            await Task.Delay(1000);
+            
             // Assert
             Assert.Equal("Hello, Mixed EventBus!", syncReceivedMessage);
             Assert.Equal("Hello, Mixed EventBus!", asyncReceivedMessage);

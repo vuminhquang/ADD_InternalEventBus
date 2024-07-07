@@ -1,99 +1,145 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ADD_InternalEventBus.CrtImplementation
 {
-    public class EventBus
+    public class EventBus : IDisposable
     {
-        private readonly Dictionary<Type, List<WeakReference>> _subscribers = new Dictionary<Type, List<WeakReference>>();
+        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>> _subscribers = new ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>>();
+        private bool _disposed;
 
         public void Subscribe<T>(Action<T> subscriber)
         {
-            if (!_subscribers.ContainsKey(typeof(T)))
-            {
-                _subscribers[typeof(T)] = new List<WeakReference>();
-            }
-
-            _subscribers[typeof(T)].Add(new WeakReference(subscriber));
+            CheckDisposed();
+            var subscribersList = _subscribers.GetOrAdd(typeof(T), _ => new ConcurrentDictionary<int, WeakReference>());
+            subscribersList[subscriber.GetHashCode()] = new WeakReference(subscriber);
         }
 
         public void Subscribe<T>(Func<T, Task> subscriber)
         {
-            if (!_subscribers.ContainsKey(typeof(T)))
-            {
-                _subscribers[typeof(T)] = new List<WeakReference>();
-            }
-
-            _subscribers[typeof(T)].Add(new WeakReference(subscriber));
+            CheckDisposed();
+            var subscribersList = _subscribers.GetOrAdd(typeof(T), _ => new ConcurrentDictionary<int, WeakReference>());
+            subscribersList[subscriber.GetHashCode()] = new WeakReference(subscriber);
         }
 
         public void Unsubscribe<T>(Action<T> subscriber)
         {
-            if (_subscribers.ContainsKey(typeof(T)))
+            CheckDisposed();
+            if (_subscribers.TryGetValue(typeof(T), out var subscribersList))
             {
-                _subscribers[typeof(T)].RemoveAll(wr => wr.Target is Action<T> target && target == subscriber);
+                subscribersList.TryRemove(subscriber.GetHashCode(), out _);
             }
         }
 
         public void Unsubscribe<T>(Func<T, Task> subscriber)
         {
-            if (_subscribers.ContainsKey(typeof(T)))
+            CheckDisposed();
+            if (_subscribers.TryGetValue(typeof(T), out var subscribersList))
             {
-                _subscribers[typeof(T)].RemoveAll(wr => wr.Target is Func<T, Task> target && target == subscriber);
+                subscribersList.TryRemove(subscriber.GetHashCode(), out _);
             }
         }
 
         public async Task PublishAsync<T>(T eventMessage)
         {
-            if (_subscribers.ContainsKey(typeof(T)))
-            {
-                var tasks = new List<Task>();
-                var toRemove = new List<WeakReference>();
+            CheckDisposed();
+            PublishInternal(eventMessage);
+            // Awaiting a completed task to keep the method signature async
+            await Task.CompletedTask;
+        }
 
-                foreach (var weakReference in _subscribers[typeof(T)])
+        public void Publish<T>(T eventMessage)
+        {
+            CheckDisposed();
+            PublishInternal(eventMessage);
+        }
+
+        private void PublishInternal<T>(T eventMessage)
+        {
+            if (!_subscribers.TryGetValue(typeof(T), out var subscribersList)) return;
+
+            var toRemove = new List<int>();
+
+            foreach (var (key, weakReference) in subscribersList)
+            {
+                if (weakReference.IsAlive)
                 {
-                    if (weakReference.IsAlive)
+                    var subscriber = weakReference.Target;
+                    if (subscriber != null)
                     {
-                        var subscriber = weakReference.Target;
-                        if (subscriber != null)
+                        _ = subscriber switch
                         {
-                            try
-                            {
-                                switch (subscriber)
+                            Func<T, Task> asyncSubscriber =>
+                                // Fire and forget with async subscriber
+                                Task.Run(() => asyncSubscriber(eventMessage)),
+                            Action<T> syncSubscriber =>
+                                // Synchronous invocation
+                                // syncSubscriber(eventMessage);
+                                Task.Run(() =>
                                 {
-                                    case Func<T, Task> asyncSubscriber:
-                                        tasks.Add(asyncSubscriber(eventMessage));
-                                        break;
-                                    case Action<T> syncSubscriber:
-                                        syncSubscriber(eventMessage);
-                                        break;
-                                }
-                            }
-                            catch (ObjectDisposedException)
-                            {
-                                // Handle or log the ObjectDisposedException if necessary
-                                toRemove.Add(weakReference);
-                            }
-                        }
-                        else
-                        {
-                            toRemove.Add(weakReference);
-                        }
+                                    syncSubscriber(eventMessage);
+                                    // try
+                                    // {
+                                    //
+                                    // }
+                                    // catch (ObjectDisposedException)
+                                    // {
+                                    //     //log to tmp.txt
+                                    //     // File.AppendAllText("tmp.txt", "ObjectDisposedException\n");
+                                    //     
+                                    //     // toRemove.Add(kvp.Key);
+                                    // }
+                                }),
+                            _ => Task.CompletedTask
+                        };
                     }
                     else
                     {
-                        toRemove.Add(weakReference);
+                        toRemove.Add(key);
                     }
                 }
-
-                // Remove dead weak references
-                foreach (var weakReference in toRemove)
+                else
                 {
-                    _subscribers[typeof(T)].Remove(weakReference);
+                    toRemove.Add(key);
                 }
+            }
 
-                await Task.WhenAll(tasks);
+            foreach (var key in toRemove)
+            {
+                subscribersList.TryRemove(key, out _);
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                // Clear all subscribers
+                foreach (var subscribersList in _subscribers.Values)
+                {
+                    subscribersList.Clear();
+                }
+                _subscribers.Clear();
+            }
+
+            _disposed = true;
+        }
+
+        private void CheckDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(EventBus));
             }
         }
     }
