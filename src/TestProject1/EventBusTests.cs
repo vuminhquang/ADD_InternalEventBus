@@ -39,21 +39,25 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
         {
             // Arrange
             string receivedMessage = null;
+            var tcs = new TaskCompletionSource<string>();
+
             _eventBus.Subscribe<string>(async message =>
             {
                 _testOutputHelper.WriteLine($"Async received message: {message}");
                 await Task.Delay(100); // Simulate async work
                 receivedMessage = message;
+                tcs.SetResult(message); // Signal that the message has been received
             });
-            
+    
             // Act
             _testOutputHelper.WriteLine("Publishing async event...");
             await _eventBus.PublishAsync("Hello, Async EventBus!");
-            
-            await Task.Delay(1000);
+
+            // Wait for the message to be received
+            var received = await tcs.Task;
 
             // Assert
-            Assert.Equal("Hello, Async EventBus!", receivedMessage);
+            Assert.Equal("Hello, Async EventBus!", received);
         }
 
         [Fact]
