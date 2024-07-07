@@ -3,6 +3,11 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Title>Syntax Sugar EventBus</Title>
+        <Authors>vu.minh.quang@outlook.com</Authors>
+        <Copyright>vu.minh.quang@outlook.com</Copyright>
+        <PackageProjectUrl>https://github.com/vuminhquang/ADD_InternalEventBus</PackageProjectUrl>
     </PropertyGroup>
 
     <ItemGroup>
