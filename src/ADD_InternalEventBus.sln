@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ADD_InternalEventBus", "ADD_InternalEventBus\ADD_InternalEventBus.csproj", "{A9658D8C-CC9A-4051-8CB7-576BA5954D60}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject1", "TestProject1\TestProject1.csproj", "{221AAF8A-F6EA-47B1-9523-A7D27E1CC86B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{A9658D8C-CC9A-4051-8CB7-576BA5954D60}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9658D8C-CC9A-4051-8CB7-576BA5954D60}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9658D8C-CC9A-4051-8CB7-576BA5954D60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{221AAF8A-F6EA-47B1-9523-A7D27E1CC86B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{221AAF8A-F6EA-47B1-9523-A7D27E1CC86B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{221AAF8A-F6EA-47B1-9523-A7D27E1CC86B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{221AAF8A-F6EA-47B1-9523-A7D27E1CC86B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
