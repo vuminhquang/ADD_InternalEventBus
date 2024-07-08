@@ -8,11 +8,11 @@
         <Authors>vu.minh.quang@outlook.com</Authors>
         <Copyright>vu.minh.quang@outlook.com</Copyright>
         <PackageProjectUrl>https://github.com/vuminhquang/ADD_InternalEventBus</PackageProjectUrl>
+        <Version>1.2.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
       <Folder Include="AbsContract\" />
-      <Folder Include="AbsDomain\" />
       <Folder Include="CrtBusiness\" />
     </ItemGroup>
 

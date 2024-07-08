@@ -8,8 +8,8 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
     {
         private static readonly EventBus _eventBus = new();
         private static readonly int _numThreads = Environment.ProcessorCount * 2; // Adjust based on the number of logical processors
-        // private static readonly int _numIterations = 1000000;
-        private static readonly int _numIterations = 10;
+        private static readonly int _numIterations = 1000000;
+        // private static readonly int _numIterations = 10;
 
         public static void Main(string[] args)
         {

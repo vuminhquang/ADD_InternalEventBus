@@ -2,10 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ADD_InternalEventBus.AbsDomain;
 
 namespace ADD_InternalEventBus.CrtImplementation
 {
-    public class EventBus : IDisposable
+    public class EventBus : IEventBus
     {
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>> _subscribers = new ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>>();
         private bool _disposed;
@@ -73,24 +74,11 @@ namespace ADD_InternalEventBus.CrtImplementation
                         {
                             Func<T, Task> asyncSubscriber =>
                                 // Fire and forget with async subscriber
-                                Task.Run(() => asyncSubscriber(eventMessage)),
+                                _ = asyncSubscriber(eventMessage),
                             Action<T> syncSubscriber =>
-                                // Synchronous invocation
-                                // syncSubscriber(eventMessage);
                                 Task.Run(() =>
                                 {
                                     syncSubscriber(eventMessage);
-                                    // try
-                                    // {
-                                    //
-                                    // }
-                                    // catch (ObjectDisposedException)
-                                    // {
-                                    //     //log to tmp.txt
-                                    //     // File.AppendAllText("tmp.txt", "ObjectDisposedException\n");
-                                    //     
-                                    //     // toRemove.Add(kvp.Key);
-                                    // }
                                 }),
                             _ => Task.CompletedTask
                         };
