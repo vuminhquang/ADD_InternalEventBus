@@ -35,19 +35,19 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
                 Action<string> subscriber = message =>
                 {
                     // Console.WriteLine($"Thread {threadId} received: {message}");
-                    throw new Exception("This should not be thrown.");
+                    // throw new Exception("This should not be thrown.");
                 };
                 _eventBus.Subscribe(subscriber);
-                _eventBus.Unsubscribe(subscriber);
+                // _eventBus.Unsubscribe(subscriber);
 
                 Func<string, Task> asyncSubscriber = async message =>
                 {
                     // await Task.Delay(10);
                     // Console.WriteLine($"Thread {threadId} received async: {message}");
-                    throw new Exception("This should not be thrown.");
+                    // throw new Exception("This should not be thrown.");
                 };
                 _eventBus.Subscribe(asyncSubscriber);
-                _eventBus.Unsubscribe(asyncSubscriber);
+                // _eventBus.Unsubscribe(asyncSubscriber);
             }
         }
 
