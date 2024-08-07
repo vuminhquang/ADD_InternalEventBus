@@ -9,7 +9,13 @@ namespace ADD_InternalEventBus.CrtImplementation
     public class ErrorHandlingEventBus : IEventBus
     {
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>> _subscribers = new ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>>();
+        private readonly Action<Exception>? _defaultLogException;
         private bool _disposed;
+
+        public ErrorHandlingEventBus(Action<Exception>? defaultLogException = null)
+        {
+            _defaultLogException = defaultLogException;
+        }
 
         public void Subscribe<T>(Action<T> subscriber)
         {
@@ -46,25 +52,25 @@ namespace ADD_InternalEventBus.CrtImplementation
         public async Task PublishAsync<T>(T eventMessage)
         {
             CheckDisposed();
-            await PublishInternalAsync(eventMessage, default);
+            await PublishInternalAsync(eventMessage, _defaultLogException);
         }
 
         public async Task PublishAsync<T>(T eventMessage, Action<Exception>? logException)
         {
             CheckDisposed();
-            await PublishInternalAsync(eventMessage, logException);
+            await PublishInternalAsync(eventMessage, logException ?? _defaultLogException);
         }
 
         public void Publish<T>(T eventMessage)
         {
             CheckDisposed();
-            PublishInternal(eventMessage, default);
+            PublishInternal(eventMessage, _defaultLogException);
         }
 
         public void Publish<T>(T eventMessage, Action<Exception>? logException)
         {
             CheckDisposed();
-            PublishInternal(eventMessage, logException);
+            PublishInternal(eventMessage, logException ?? _defaultLogException);
         }
 
         private async Task PublishInternalAsync<T>(T eventMessage, Action<Exception>? logException)
@@ -83,7 +89,6 @@ namespace ADD_InternalEventBus.CrtImplementation
                         switch (subscriber)
                         {
                             case Func<T, Task> asyncSubscriber:
-                                // Fire and forget with async subscriber
                                 await Task.Run(async () =>
                                 {
                                     try
@@ -145,7 +150,6 @@ namespace ADD_InternalEventBus.CrtImplementation
                         _ = subscriber switch
                         {
                             Func<T, Task> asyncSubscriber =>
-                                // Fire and forget with async subscriber
                                 Task.Run(async () =>
                                 {
                                     try
@@ -203,7 +207,6 @@ namespace ADD_InternalEventBus.CrtImplementation
 
             if (disposing)
             {
-                // Clear all subscribers
                 foreach (var subscribersList in _subscribers.Values)
                 {
                     subscribersList.Clear();
