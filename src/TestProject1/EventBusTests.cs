@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
 namespace ADD_InternalEventBus.CrtImplementation.Tests
@@ -10,7 +12,12 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
         public EventBusTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
-            _eventBus = new EventBus();
+            var serviceProvider = new ServiceCollection()
+                .AddLogging(configure => configure.AddConsole())
+                .AddSingleton<EventBus>()
+                .BuildServiceProvider();
+
+            _eventBus = serviceProvider.GetRequiredService<EventBus>();
         }
 
         [Fact]

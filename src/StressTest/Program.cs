@@ -1,16 +1,26 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace ADD_InternalEventBus.CrtImplementation.Tests
 {
     public class Program
     {
-        private static readonly EventBus _eventBus = new();
+        private static EventBus _eventBus;
         private static readonly int _numThreads = Environment.ProcessorCount * 2; // Adjust based on the number of logical processors
         private static readonly int _numIterations = 1000000;
         // private static readonly int _numIterations = 10;
 
+        static Program()
+        {
+            var serviceProvider = new ServiceCollection()
+                .AddLogging(configure => configure.AddConsole())
+                .AddSingleton<EventBus>()
+                .BuildServiceProvider();
+
+            _eventBus = serviceProvider.GetRequiredService<EventBus>();
+        }
+        
         public static void Main(string[] args)
         {
             Console.WriteLine("Starting stress test...");

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ADD_InternalEventBus.AbsDomain;
+using Microsoft.Extensions.Logging;
 
 namespace ADD_InternalEventBus.CrtImplementation
 {
@@ -10,7 +11,13 @@ namespace ADD_InternalEventBus.CrtImplementation
     {
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>> _subscribers = new ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>>();
         private bool _disposed;
-
+        private readonly ILogger _logger;
+        
+        public EventBus(ILogger<EventBus> logger)
+        {
+            _logger = logger;
+        }
+        
         public void Subscribe<T>(Action<T> subscriber)
         {
             CheckDisposed();
@@ -72,14 +79,10 @@ namespace ADD_InternalEventBus.CrtImplementation
                     {
                         _ = subscriber switch
                         {
-                            Func<T, Task> asyncSubscriber =>
-                                // Fire and forget with async subscriber
-                                _ = asyncSubscriber(eventMessage),
-                            Action<T> syncSubscriber =>
-                                Task.Run(() =>
-                                {
-                                    syncSubscriber(eventMessage);
-                                }),
+                            Func<T, Task> asyncSubscriber => asyncSubscriber(eventMessage)
+                                .ContinueWith(t => HandleException(t.Exception), TaskContinuationOptions.OnlyOnFaulted),
+                            Action<T> syncSubscriber => Task.Run(() => syncSubscriber(eventMessage))
+                                .ContinueWith(t => HandleException(t.Exception), TaskContinuationOptions.OnlyOnFaulted),
                             _ => Task.CompletedTask
                         };
                     }
@@ -97,6 +100,14 @@ namespace ADD_InternalEventBus.CrtImplementation
             foreach (var key in toRemove)
             {
                 subscribersList.TryRemove(key, out _);
+            }
+        }
+
+        private void HandleException(Exception? exception)
+        {
+            if (exception != null)
+            {
+                _logger.LogError(exception, "An exception occurred while processing an event.");
             }
         }
 

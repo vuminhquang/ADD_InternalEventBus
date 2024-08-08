@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -13,7 +15,12 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
         public EventBusWeakReferenceTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
-            _eventBus = new EventBus();
+            var serviceProvider = new ServiceCollection()
+                .AddLogging(configure => configure.AddConsole())
+                .AddSingleton<EventBus>()
+                .BuildServiceProvider();
+
+            _eventBus = serviceProvider.GetRequiredService<EventBus>();
         }
 
         [Fact]

@@ -8,12 +8,16 @@
         <Authors>vu.minh.quang@outlook.com</Authors>
         <Copyright>vu.minh.quang@outlook.com</Copyright>
         <PackageProjectUrl>https://github.com/vuminhquang/ADD_InternalEventBus</PackageProjectUrl>
-        <Version>2.2.0</Version>
+        <Version>2.2.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
       <Folder Include="AbsContract\" />
       <Folder Include="CrtBusiness\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
     </ItemGroup>
 
 </Project>
