@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using ADD_InternalEventBus.AbsDomain;
 using Microsoft.Extensions.Logging;
@@ -9,106 +7,50 @@ namespace ADD_InternalEventBus.CrtImplementation
 {
     public class EventBus : IEventBus
     {
-        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>> _subscribers = new ConcurrentDictionary<Type, ConcurrentDictionary<int, WeakReference>>();
+        private readonly IEventBus _eventBus;
         private bool _disposed;
-        private readonly ILogger _logger;
-        
-        public EventBus(ILogger<EventBus> logger)
+
+        public EventBus(ILogger<EventBus> logger, EventBusOptions? options = null)
         {
-            _logger = logger;
+            _eventBus = options is { UseWeakReferences: true }
+                ? (IEventBus)new WeakRefEventBus(logger, options)
+                : new StrongRefEventBus(logger, options);
         }
-        
+
         public void Subscribe<T>(Action<T> subscriber)
         {
             CheckDisposed();
-            var subscribersList = _subscribers.GetOrAdd(typeof(T), _ => new ConcurrentDictionary<int, WeakReference>());
-            subscribersList[subscriber.GetHashCode()] = new WeakReference(subscriber);
+            _eventBus.Subscribe(subscriber);
         }
 
         public void Subscribe<T>(Func<T, Task> subscriber)
         {
             CheckDisposed();
-            var subscribersList = _subscribers.GetOrAdd(typeof(T), _ => new ConcurrentDictionary<int, WeakReference>());
-            subscribersList[subscriber.GetHashCode()] = new WeakReference(subscriber);
+            _eventBus.Subscribe(subscriber);
         }
 
         public void Unsubscribe<T>(Action<T> subscriber)
         {
             CheckDisposed();
-            if (_subscribers.TryGetValue(typeof(T), out var subscribersList))
-            {
-                subscribersList.TryRemove(subscriber.GetHashCode(), out _);
-            }
+            _eventBus.Unsubscribe(subscriber);
         }
 
         public void Unsubscribe<T>(Func<T, Task> subscriber)
         {
             CheckDisposed();
-            if (_subscribers.TryGetValue(typeof(T), out var subscribersList))
-            {
-                subscribersList.TryRemove(subscriber.GetHashCode(), out _);
-            }
+            _eventBus.Unsubscribe(subscriber);
         }
 
         public async Task PublishAsync<T>(T eventMessage)
         {
             CheckDisposed();
-            PublishInternal(eventMessage);
-            // Awaiting a completed task to keep the method signature async
-            await Task.CompletedTask;
+            await _eventBus.PublishAsync(eventMessage);
         }
 
         public void Publish<T>(T eventMessage)
         {
             CheckDisposed();
-            PublishInternal(eventMessage);
-        }
-
-        private void PublishInternal<T>(T eventMessage)
-        {
-            if (!_subscribers.TryGetValue(typeof(T), out var subscribersList)) return;
-
-            var toRemove = new List<int>();
-
-            foreach (var (key, weakReference) in subscribersList)
-            {
-                if (weakReference.IsAlive)
-                {
-                    var subscriber = weakReference.Target;
-                    if (subscriber != null)
-                    {
-                        _ = subscriber switch
-                        {
-                            Func<T, Task> asyncSubscriber => asyncSubscriber(eventMessage)
-                                .ContinueWith(t => HandleException(t.Exception), TaskContinuationOptions.OnlyOnFaulted),
-                            Action<T> syncSubscriber => Task.Run(() => syncSubscriber(eventMessage))
-                                .ContinueWith(t => HandleException(t.Exception), TaskContinuationOptions.OnlyOnFaulted),
-                            _ => Task.CompletedTask
-                        };
-                    }
-                    else
-                    {
-                        toRemove.Add(key);
-                    }
-                }
-                else
-                {
-                    toRemove.Add(key);
-                }
-            }
-
-            foreach (var key in toRemove)
-            {
-                subscribersList.TryRemove(key, out _);
-            }
-        }
-
-        private void HandleException(Exception? exception)
-        {
-            if (exception != null)
-            {
-                _logger.LogError(exception, "An exception occurred while processing an event.");
-            }
+            _eventBus.Publish(eventMessage);
         }
 
         public void Dispose()
@@ -123,12 +65,7 @@ namespace ADD_InternalEventBus.CrtImplementation
 
             if (disposing)
             {
-                // Clear all subscribers
-                foreach (var subscribersList in _subscribers.Values)
-                {
-                    subscribersList.Clear();
-                }
-                _subscribers.Clear();
+                _eventBus.Dispose();
             }
 
             _disposed = true;
@@ -141,5 +78,11 @@ namespace ADD_InternalEventBus.CrtImplementation
                 throw new ObjectDisposedException(nameof(EventBus));
             }
         }
+    }
+
+    public class EventBusOptions
+    {
+        public bool UseWeakReferences { get; set; }
+        public bool FireAndForget { get; set; }
     }
 }

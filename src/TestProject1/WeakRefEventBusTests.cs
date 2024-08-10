@@ -4,20 +4,20 @@ using Xunit.Abstractions;
 
 namespace ADD_InternalEventBus.CrtImplementation.Tests
 {
-    public class EventBusTests
+    public class WeakRefEventBusTests
     {
         private readonly ITestOutputHelper _testOutputHelper;
-        private readonly EventBus _eventBus;
+        private readonly WeakRefEventBus _weakRefEventBus;
 
-        public EventBusTests(ITestOutputHelper testOutputHelper)
+        public WeakRefEventBusTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
             var serviceProvider = new ServiceCollection()
                 .AddLogging(configure => configure.AddConsole())
-                .AddSingleton<EventBus>()
+                .AddSingleton<WeakRefEventBus>()
                 .BuildServiceProvider();
 
-            _eventBus = serviceProvider.GetRequiredService<EventBus>();
+            _weakRefEventBus = serviceProvider.GetRequiredService<WeakRefEventBus>();
         }
 
         [Fact]
@@ -25,7 +25,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
         {
             // Arrange
             string receivedMessage = null;
-            _eventBus.Subscribe<string>(message =>
+            _weakRefEventBus.Subscribe<string>(message =>
             {
                 _testOutputHelper.WriteLine($"Sync received message: {message}");
                 receivedMessage = message;
@@ -33,7 +33,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
             
             // Act
             _testOutputHelper.WriteLine("Publishing sync event...");
-            await _eventBus.PublishAsync("Hello, Sync EventBus!");
+            await _weakRefEventBus.PublishAsync("Hello, Sync EventBus!");
             
             await Task.Delay(1000);
 
@@ -48,7 +48,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
             string receivedMessage = null;
             var tcs = new TaskCompletionSource<string>();
 
-            _eventBus.Subscribe<string>(async message =>
+            _weakRefEventBus.Subscribe<string>(async message =>
             {
                 _testOutputHelper.WriteLine($"Async received message: {message}");
                 await Task.Delay(100); // Simulate async work
@@ -58,7 +58,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
     
             // Act
             _testOutputHelper.WriteLine("Publishing async event...");
-            await _eventBus.PublishAsync("Hello, Async EventBus!");
+            await _weakRefEventBus.PublishAsync("Hello, Async EventBus!");
 
             // Wait for the message to be received
             var received = await tcs.Task;
@@ -74,12 +74,12 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
             string syncReceivedMessage = null;
             string asyncReceivedMessage = null;
 
-            _eventBus.Subscribe<string>(message =>
+            _weakRefEventBus.Subscribe<string>(message =>
             {
                 _testOutputHelper.WriteLine($"Sync received message: {message}");
                 syncReceivedMessage = message;
             });
-            _eventBus.Subscribe<string>(async message =>
+            _weakRefEventBus.Subscribe<string>(async message =>
             {
                 _testOutputHelper.WriteLine($"Async received message: {message}");
                 await Task.Delay(100); // Simulate async work
@@ -88,7 +88,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
 
             // Act
             _testOutputHelper.WriteLine("Publishing mixed event...");
-            await _eventBus.PublishAsync("Hello, Mixed EventBus!");
+            await _weakRefEventBus.PublishAsync("Hello, Mixed EventBus!");
             
             await Task.Delay(1000);
             

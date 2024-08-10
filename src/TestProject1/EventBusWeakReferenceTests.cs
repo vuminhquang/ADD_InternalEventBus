@@ -10,17 +10,17 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
     public class EventBusWeakReferenceTests
     {
         private readonly ITestOutputHelper _testOutputHelper;
-        private readonly EventBus _eventBus;
+        private readonly WeakRefEventBus _weakRefEventBus;
 
         public EventBusWeakReferenceTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
             var serviceProvider = new ServiceCollection()
                 .AddLogging(configure => configure.AddConsole())
-                .AddSingleton<EventBus>()
+                .AddSingleton<WeakRefEventBus>()
                 .BuildServiceProvider();
 
-            _eventBus = serviceProvider.GetRequiredService<EventBus>();
+            _weakRefEventBus = serviceProvider.GetRequiredService<WeakRefEventBus>();
         }
 
         [Fact]
@@ -36,7 +36,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
 
             // Act - Publish event while the subscriber is alive
             _testOutputHelper.WriteLine("Publishing event with active subscriber...");
-            await _eventBus.PublishAsync("Hello, Weak Reference EventBus!");
+            await _weakRefEventBus.PublishAsync("Hello, Weak Reference EventBus!");
 
             // sleep for a while to allow the subscriber to receive the message
             await Task.Delay(1000);
@@ -52,7 +52,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
             // Act - Publish event after the subscriber should be collected
             receivedMessage = string.Empty; // Reset received message
             _testOutputHelper.WriteLine("Publishing event after subscriber should be collected...");
-            await _eventBus.PublishAsync("This should not be received");
+            await _weakRefEventBus.PublishAsync("This should not be received");
 
             // Assert that the weak reference target is null (indicating the object has been collected)
             Assert.Null(weakReference.Target);
@@ -73,10 +73,10 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
             using (subscriber = new Subscriber(_testOutputHelper, message => receivedMessage = message))
             {
                 weakReference = new WeakReference(subscriber);
-                _eventBus.Subscribe<string>(subscriber.HandleEvent);
+                _weakRefEventBus.Subscribe<string>(subscriber.HandleEvent);
                 // Act - Publish event while the subscriber is alive
                 _testOutputHelper.WriteLine("Publishing event with active subscriber...");
-                await _eventBus.PublishAsync("Hello, Weak Reference EventBus!");
+                await _weakRefEventBus.PublishAsync("Hello, Weak Reference EventBus!");
                 // sleep for a while to allow the subscriber to receive the message
                 await Task.Delay(1000);
             }
@@ -92,7 +92,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
             // Act - Publish event after the subscriber should be collected
             receivedMessage = string.Empty; // Reset received message
             _testOutputHelper.WriteLine("Publishing event after subscriber should be collected...");
-            await _eventBus.PublishAsync("This should not be received");
+            await _weakRefEventBus.PublishAsync("This should not be received");
 
             // Assert that the weak reference target is null (indicating the object has been collected)
             Assert.Null(weakReference.Target);
@@ -105,7 +105,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
         {
             subscriber = new Subscriber(_testOutputHelper, handleMessage);
             var weakReference = new WeakReference(subscriber);
-            _eventBus.Subscribe<string>(subscriber.HandleEvent);
+            _weakRefEventBus.Subscribe<string>(subscriber.HandleEvent);
             return weakReference;
         }
 

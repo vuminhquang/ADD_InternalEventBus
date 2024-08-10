@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using ADD_InternalEventBus.AbsDomain;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -6,7 +7,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
 {
     public class Program
     {
-        private static EventBus _eventBus;
+        private static IEventBus _eventBus;
         private static readonly int _numThreads = Environment.ProcessorCount * 2; // Adjust based on the number of logical processors
         private static readonly int _numIterations = 1000000;
         // private static readonly int _numIterations = 10;
@@ -15,7 +16,22 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
         {
             var serviceProvider = new ServiceCollection()
                 .AddLogging(configure => configure.AddConsole())
-                .AddSingleton<EventBus>()
+                .AddSingleton<EventBus>(provider =>
+                {
+                    var logger = provider.GetRequiredService<ILogger<EventBus>>();
+                    return new EventBus(logger, new EventBusOptions
+                    {
+                        UseWeakReferences = false,
+                        FireAndForget = true
+                    });
+                })
+                .AddSingleton<WeakRefEventBus>()
+                .AddSingleton<StrongRefEventBus>()
+                // .AddSingleton<EventBus2>( serviceProvider =>
+                // {
+                //     var logger = serviceProvider.GetRequiredService<ILogger<EventBus2>>();
+                //     return new EventBus2(logger, 8);
+                // })
                 .BuildServiceProvider();
 
             _eventBus = serviceProvider.GetRequiredService<EventBus>();
