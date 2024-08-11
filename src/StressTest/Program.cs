@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using ADD_InternalEventBus.AbsDomain;
+using ADD_InternalEventBus.CrtImplementation.BackgroundJobQueue;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
         {
             var serviceProvider = new ServiceCollection()
                 .AddLogging(configure => configure.AddConsole())
+                .AddSingleton<BackgroundJobService>()
                 .AddSingleton<EventBus>(provider =>
                 {
                     var logger = provider.GetRequiredService<ILogger<EventBus>>();

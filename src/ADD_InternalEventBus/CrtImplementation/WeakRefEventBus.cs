@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ADD_InternalEventBus.AbsDomain;
+using ADD_InternalEventBus.CrtImplementation.BackgroundJobQueue;
 using Microsoft.Extensions.Logging;
 
 namespace ADD_InternalEventBus.CrtImplementation
@@ -82,14 +83,21 @@ namespace ADD_InternalEventBus.CrtImplementation
                         var subscriber = weakReference.Target;
                         if (subscriber != null)
                         {
-                            _ = subscriber switch
+                            switch (subscriber)
                             {
-                                Func<T, Task> asyncSubscriber => asyncSubscriber(eventMessage)
-                                    .ContinueWith(t => HandleException(t.Exception), TaskContinuationOptions.OnlyOnFaulted),
-                                Action<T> syncSubscriber => Task.Run(() => syncSubscriber(eventMessage))
-                                    .ContinueWith(t => HandleException(t.Exception), TaskContinuationOptions.OnlyOnFaulted),
-                                _ => Task.CompletedTask
-                            };
+                                case Func<T, Task> asyncSubscriber:
+                                    BackgroundJobManager.EnqueueJob("",
+                                        (provider, token) => asyncSubscriber(eventMessage)
+                                            .ContinueWith(t => HandleException(t.Exception),
+                                                TaskContinuationOptions.OnlyOnFaulted));
+                                    break;
+                                case Action<T> syncSubscriber:
+                                    BackgroundJobManager.EnqueueJob("",
+                                        (provider, token) => Task.Run(() => syncSubscriber(eventMessage), token)
+                                            .ContinueWith(t => HandleException(t.Exception),
+                                                TaskContinuationOptions.OnlyOnFaulted));
+                                    break;
+                            }
                         }
                         else
                         {

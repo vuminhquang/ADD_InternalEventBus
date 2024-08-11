@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ADD_InternalEventBus.AbsDomain;
+using ADD_InternalEventBus.CrtImplementation.BackgroundJobQueue;
 using Microsoft.Extensions.Logging;
 
 namespace ADD_InternalEventBus.CrtImplementation
@@ -78,10 +79,16 @@ namespace ADD_InternalEventBus.CrtImplementation
                     switch (subscriber)
                     {
                         case Func<T, Task> asyncSubscriber:
-                            asyncSubscriber(eventMessage).ContinueWith(t => HandleException(t.Exception!), TaskContinuationOptions.OnlyOnFaulted);
+                            BackgroundJobManager.EnqueueJob("",
+                                (provider, token) => asyncSubscriber(eventMessage)
+                                    .ContinueWith(t => HandleException(t.Exception!),
+                                        TaskContinuationOptions.OnlyOnFaulted));
                             break;
                         case Action<T> syncSubscriber:
-                            Task.Run(() => syncSubscriber(eventMessage)).ContinueWith(t => HandleException(t.Exception!), TaskContinuationOptions.OnlyOnFaulted);
+                            BackgroundJobManager.EnqueueJob("",
+                                (provider, token) => Task.Run(() => syncSubscriber(eventMessage), token)
+                                    .ContinueWith(t => HandleException(t.Exception!),
+                                        TaskContinuationOptions.OnlyOnFaulted));
                             break;
                     }
                 }
