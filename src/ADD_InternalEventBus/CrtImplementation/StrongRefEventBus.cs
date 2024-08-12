@@ -78,16 +78,18 @@ namespace ADD_InternalEventBus.CrtImplementation
                 {
                     if (subscriber != null)
                     {
-                        _ = subscriber switch
+                        switch (subscriber)
                         {
-                            Func<T, Task> asyncSubscriber => asyncSubscriber(eventMessage)
-                                .ContinueWith(t => HandleException(t.Exception!),
-                                    TaskContinuationOptions.OnlyOnFaulted),
-                            Action<T> syncSubscriber => Task.Run(() => syncSubscriber(eventMessage))
-                                .ContinueWith(t => HandleException(t.Exception!),
-                                    TaskContinuationOptions.OnlyOnFaulted),
-                            _ => Task.CompletedTask
-                        };
+                            case Func<T, Task> asyncSubscriber:
+                                HandleFunc(asyncSubscriber, eventMessage);
+                                break;
+                            case Action<T> syncSubscriber:
+                                HandleAction(syncSubscriber, eventMessage);
+                                break;
+                            default:
+                                _ = Task.CompletedTask;
+                                break;
+                        }
                     }
                 }
             }
@@ -116,6 +118,37 @@ namespace ADD_InternalEventBus.CrtImplementation
             }
         }
 
+        private async void HandleAction<T>(Action<T> action, T eventMessage)
+        {
+            await CallBackAsync();
+            return;
+
+            Task CallBackAsync()
+            {
+                try
+                {
+                    action(eventMessage);
+                }
+                catch (Exception ex)
+                {
+                    HandleException(ex);
+                }
+                return Task.CompletedTask;
+            }
+        }
+        
+        private async void HandleFunc<T>(Func<T, Task> func, T eventMessage)
+        {
+            try
+            {
+                await func(eventMessage);
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+        
         private void HandleException(Exception exception)
         {
             _logger.LogError(exception, "An exception occurred while processing an event.");

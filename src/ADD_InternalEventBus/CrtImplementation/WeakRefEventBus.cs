@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ADD_InternalEventBus.AbsDomain;
 using ADD_InternalEventBus.CrtImplementation.BackgroundJobQueue;
@@ -83,16 +84,18 @@ namespace ADD_InternalEventBus.CrtImplementation
                         var subscriber = weakReference.Target;
                         if (subscriber != null)
                         {
-                            _ = subscriber switch
+                            switch (subscriber)
                             {
-                                Func<T, Task> asyncSubscriber => asyncSubscriber(eventMessage)
-                                    .ContinueWith(t => HandleException(t.Exception),
-                                        TaskContinuationOptions.OnlyOnFaulted),
-                                Action<T> syncSubscriber => Task.Run(() => syncSubscriber(eventMessage))
-                                    .ContinueWith(t => HandleException(t.Exception),
-                                        TaskContinuationOptions.OnlyOnFaulted),
-                                _ => Task.CompletedTask
-                            };
+                                case Func<T, Task> asyncSubscriber:
+                                    HandleFunc(asyncSubscriber, eventMessage);
+                                    break;
+                                case Action<T> syncSubscriber:
+                                    HandleAction(syncSubscriber, eventMessage);
+                                    break;
+                                default:
+                                    _ = Task.CompletedTask;
+                                    break;
+                            }
                         }
                         else
                         {
@@ -150,6 +153,37 @@ namespace ADD_InternalEventBus.CrtImplementation
             }
         }
 
+        private async void HandleAction<T>(Action<T> action, T eventMessage)
+        {
+            await CallBackAsync();
+            return;
+
+            Task CallBackAsync()
+            {
+                try
+                {
+                    action(eventMessage);
+                }
+                catch (Exception ex)
+                {
+                    HandleException(ex);
+                }
+                return Task.CompletedTask;
+            }
+        }
+        
+        private async void HandleFunc<T>(Func<T, Task> func, T eventMessage)
+        {
+            try
+            {
+                await func(eventMessage);
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+        
         private void HandleException(Exception? exception)
         {
             if (exception != null)
