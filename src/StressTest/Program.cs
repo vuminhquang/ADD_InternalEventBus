@@ -22,7 +22,7 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
                     var logger = provider.GetRequiredService<ILogger<EventBus>>();
                     return new EventBus(logger, new EventBusOptions
                     {
-                        UseWeakReferences = false,
+                        UseWeakReferences = true,
                         FireAndForget = true
                     });
                 })

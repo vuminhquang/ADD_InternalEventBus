@@ -76,7 +76,7 @@ namespace ADD_InternalEventBus.CrtImplementation.BackgroundJobQueue
             // check if the current running jobs is more than limit
             if (_runningJobs.Count >= BackgroundJobManager.MaxRunningJobs)
             {
-                Console.WriteLine("Running jobs is more than limit");
+                //Console.WriteLine("Running jobs is more than limit");
                 return;
             }
             
@@ -104,7 +104,7 @@ namespace ADD_InternalEventBus.CrtImplementation.BackgroundJobQueue
                 {
                     await backgroundJob.ExecuteAsync(_cancellationTokenSource.Token);
                     // _logger.LogInformation($"BackgroundJobService - Job {backgroundJob.JobName} completed");
-                    Console.WriteLine($"BackgroundJobService - Job {backgroundJob.JobName} completed");
+                    // Console.WriteLine($"BackgroundJobService - Job {backgroundJob.JobName} completed");
                     tcs.SetResult(Task.CompletedTask); // Task completed successfully
                 }
                 catch (Exception ex)

@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using ADD_InternalEventBus.AbsDomain;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
@@ -10,17 +11,25 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
     public class EventBusWeakReferenceTests
     {
         private readonly ITestOutputHelper _testOutputHelper;
-        private readonly WeakRefEventBus _weakRefEventBus;
+        private readonly IEventBus _weakRefEventBus;
 
         public EventBusWeakReferenceTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
             var serviceProvider = new ServiceCollection()
                 .AddLogging(configure => configure.AddConsole())
-                .AddSingleton<WeakRefEventBus>()
+                .AddSingleton<IEventBus, EventBus>(provider =>
+                {
+                    var logger = provider.GetRequiredService<ILogger<EventBus>>();
+                    return new EventBus(logger, new EventBusOptions
+                    {
+                        UseWeakReferences = true,
+                        FireAndForget = true
+                    });
+                })
                 .BuildServiceProvider();
 
-            _weakRefEventBus = serviceProvider.GetRequiredService<WeakRefEventBus>();
+            _weakRefEventBus = serviceProvider.GetRequiredService<IEventBus>();
         }
 
         [Fact]
@@ -32,7 +41,11 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
             Subscriber? subscriber = null;
 
             // Create a weak reference to the subscriber within its own scope
-            weakReference = CreateSubscriberAndSubscribe(out subscriber, message => receivedMessage = message);
+            weakReference = CreateSubscriberAndSubscribe(out subscriber, message =>
+                {
+                    receivedMessage = message;
+                }
+            );
 
             // Act - Publish event while the subscriber is alive
             _testOutputHelper.WriteLine("Publishing event with active subscriber...");
