@@ -1,10 +1,10 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ae631062_002Dba1a_002D4b8c_002D8627_002D214e8c55faa4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="EventBusTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::ADD_InternalEventBus.CrtImplementation.Tests.EventBusTests&lt;/TestId&gt;
-    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::ADD_InternalEventBus.CrtImplementation.Tests.EventBusTests2_WeakReferences&lt;/TestId&gt;
-    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::ADD_InternalEventBus.CrtImplementation.Tests.EventBusWeakReferenceTests&lt;/TestId&gt;
-    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::ADD_InternalEventBus.CrtImplementation.Tests.WeakEventTests&lt;/TestId&gt;
-    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::WeakEventTests.Raise_ShouldNotInvokeGarbageCollectedListeners&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ae631062_002Dba1a_002D4b8c_002D8627_002D214e8c55faa4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="EventBusTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::ADD_InternalEventBus.CrtImplementation.Tests.EventBusTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::ADD_InternalEventBus.CrtImplementation.Tests.EventBusTests2_WeakReferences&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::ADD_InternalEventBus.CrtImplementation.Tests.EventBusWeakReferenceTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::ADD_InternalEventBus.CrtImplementation.Tests.WeakEventTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::221AAF8A-F6EA-47B1-9523-A7D27E1CC86B::net8.0::WeakEventTests.Raise_ShouldNotInvokeGarbageCollectedListeners&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

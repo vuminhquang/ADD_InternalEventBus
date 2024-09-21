@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using ADD_InternalEventBus.AbsDomain;
-using ADD_InternalEventBus.CrtImplementation.BackgroundJobQueue;
+using ADD_InternalEventBus.Switchable;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -23,19 +23,17 @@ namespace ADD_InternalEventBus.CrtImplementation.Tests
                     return new EventBus(logger, new EventBusOptions
                     {
                         UseWeakReferences = false,
+                        // UseWeakReferences = true,
                         FireAndForget = true
                     });
                 })
                 .AddSingleton<WeakRefEventBus>()
                 .AddSingleton<StrongRefEventBus>()
-                // .AddSingleton<EventBus2>( serviceProvider =>
-                // {
-                //     var logger = serviceProvider.GetRequiredService<ILogger<EventBus2>>();
-                //     return new EventBus2(logger, 8);
-                // })
+                .AddSingleton<InMemoryEventBus>()
                 .BuildServiceProvider();
 
             _eventBus = serviceProvider.GetRequiredService<EventBus>();
+            // _eventBus = serviceProvider.GetRequiredService<InMemoryEventBus>();
         }
         
         public static void Main(string[] args)

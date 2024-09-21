@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ADD_InternalEventBus.AbsDomain;
-using ADD_InternalEventBus.CrtImplementation.BackgroundJobQueue;
 using Microsoft.Extensions.Logging;
 
 namespace ADD_InternalEventBus.CrtImplementation

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using ADD_InternalEventBus.AbsDomain;
-using ADD_InternalEventBus.CrtImplementation.BackgroundJobQueue;
 using Microsoft.Extensions.Logging;
 
 namespace ADD_InternalEventBus.CrtImplementation
@@ -68,50 +67,7 @@ namespace ADD_InternalEventBus.CrtImplementation
 
         protected abstract void PublishInternal<T>(T eventMessage);
 
-        protected Task HandleSubscriber(object subscriber, object eventMessage)
-        {
-            return subscriber switch
-            {
-                Func<object, Task> asyncSubscriber => HandleAsyncSubscriber(asyncSubscriber, eventMessage),
-                Action<object> syncSubscriber => HandleSyncSubscriber(syncSubscriber, eventMessage),
-                _ => Task.CompletedTask
-            };
-        }
 
-        private Task HandleAsyncSubscriber(Func<object, Task> asyncSubscriber, object eventMessage)
-        {
-            BackgroundJobManager.EnqueueJob("", (provider, token) =>
-            {
-                try
-                {
-                    return asyncSubscriber(eventMessage);
-                }
-                catch (Exception ex)
-                {
-                    HandleException(ex);
-                    return Task.CompletedTask;
-                }
-            });
-            return Task.CompletedTask;
-        }
-
-        private Task HandleSyncSubscriber(Action<object> syncSubscriber, object eventMessage)
-        {
-            BackgroundJobManager.EnqueueJob("", (provider, token) =>
-            {
-                try
-                {
-                    syncSubscriber(eventMessage);
-                    return Task.CompletedTask;
-                }
-                catch (Exception ex)
-                {
-                    HandleException(ex);
-                    return Task.CompletedTask;
-                }
-            });
-            return Task.CompletedTask;
-        }
 
         protected void HandleException(Exception? exception)
         {
